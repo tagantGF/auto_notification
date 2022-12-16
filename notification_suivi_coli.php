@@ -3,7 +3,7 @@
 	header("Content-Type: text/html; charset=utf-8");
 	include_once('model/bigModelForMe.php');
 	//**************************************get all commands status ********************************** */ da028
-	$clients = getUser('',$manager);
+	//$clients = getUser('',$manager);
 	$lesMails = array();
 	$commandes = array();
 	function getStatus(){
@@ -77,60 +77,62 @@
 			if(count($recup) == 0){
 				if($item2[0] != '' && $item2[1] != '' && $item2[2] != ''){
 					$emaill = '';
-						$rr = str_replace("&nbsp;","",$item2[1]);
-						if($item2[0] == "Livré conforme"){
-							if($item2[0] != ''){
-								if(intval($rr) != 0){
-									$bl = intval($rr);
-								}else{
-									$bl = $rr;
-								}
-								$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
-								$numcmd = $cmd[0]->ncommand;
-                                $code_clt = $cmd[0]->code_clt;
+					$rr = str_replace("&nbsp;","",$item2[1]);
+					if($item2[0] == "Livré conforme"){
+						if($item2[0] != ''){
+							if(intval($rr) != 0){
+								$bl = intval($rr);
+							}else{
+								$bl = $rr;
 							}
-                            $clients = getUser("$code_clt",$manager);
-                            if($clients->client->email != ''){
-                                $emaill = $clients->client->email;
-                                $table = array(
-                                	'statut'=>"$item2[0]",
-                                	'ref'=>$rr,
-                                	'mail'=>"$emaill",
-                                	'client_info'=>"$item2[2]",
-                                	'send'=>"true"
-                                );
-                                $manager->insertion('suivi_expedition',$table,'');
-								if(!in_array($emaill,$restrictions)){
-									redirectTo($item2[0],$emaill,$numcmd);
-								}
-                            }
-						}else{
-							if($item2[0] != ''){
-								if(intval($rr) != 0){
-									$bl = intval($rr);
-								}else{
-									$bl = $rr;
-								}
-								$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
-								$numcmd = $cmd[0]->ncommand;
-                                $code_clt = $cmd[0]->code_clt;
-							}
-                            $clients = getUser("$code_clt",$manager);
-                            if($clients->client->email != ''){
-                                $emaill = $clients->client->email;
-                                $table = array(
-                                	'statut'=>"$item2[0]",
-                                	'ref'=>$rr,
-                                	'mail'=>"$emaill",
-                                	'client_info'=>"$item2[2]",
-                                	'send'=>"false"
-                                );
-                                $manager->insertion('suivi_expedition',$table,'');
-								if(!in_array($emaill,$restrictions)){
-									redirectTo($item2[0],$emaill,$numcmd);
-								}
-                            }
+							$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
+							$numcmd = $cmd[0]->ncommand;
+							$code_clt = $cmd[0]->code_clt;
+							$code_chantier = $cmd[0]->code_chantier;
 						}
+						$clients = getUser("$code_clt",$manager);
+						if($clients->client->email != ''){
+							$emaill = $clients->client->email;
+							$table = array(
+								'statut'=>"$item2[0]",
+								'ref'=>$rr,
+								'mail'=>"$emaill",
+								'client_info'=>"$item2[2]",
+								'send'=>"true"
+							);
+							$manager->insertion('suivi_expedition',$table,'');
+							if(!in_array($emaill,$restrictions)){
+								redirectTo($item2[0],$emaill,$numcmd,$code_chantier);
+							}
+						}
+					}else{
+						if($item2[0] != ''){
+							if(intval($rr) != 0){
+								$bl = intval($rr);
+							}else{
+								$bl = $rr;
+							}
+							$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
+							$numcmd = $cmd[0]->ncommand;
+							$code_clt = $cmd[0]->code_clt;
+							$code_chantier = $cmd[0]->code_chantier;
+						}
+						$clients = getUser("$code_clt",$manager);
+						if($clients->client->email != ''){
+							$emaill = $clients->client->email;
+							$table = array(
+								'statut'=>"$item2[0]",
+								'ref'=>$rr,
+								'mail'=>"$emaill",
+								'client_info'=>"$item2[2]",
+								'send'=>"false"
+							);
+							$manager->insertion('suivi_expedition',$table,'');
+							if(!in_array($emaill,$restrictions)){
+								redirectTo($item2[0],$emaill,$numcmd,$code_chantier);
+							}
+						}
+					}
 				}
 			}else{
 				if($item2[0] != $recup[0]->statut){
@@ -148,8 +150,9 @@
 						}
 						$numcmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
 						$numcmd = $numcmd[0]->ncommand;
+						$code_chantier = $numcmd[0]->code_chantier;
 						if(!in_array($maill,$restrictions)){
-							redirectTo($item2[0],$maill,$numcmd);
+							redirectTo($item2[0],$maill,$numcmd,$code_chantier);
 						}
 						$manager->modifier('suivi_expedition',$table,"num_exp=$num_exp");
 					}else{
@@ -167,8 +170,9 @@
 							}
 							$numcmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
 							$numcmd = $numcmd[0]->ncommand;
+							$code_chantier = $numcmd[0]->code_chantier;
 							if(!in_array($maill,$restrictions)){
-								redirectTo($item2[0],$maill,$numcmd);
+								redirectTo($item2[0],$maill,$numcmd,$code_chantier);
 							}
 						}
 						$manager->modifier('suivi_expedition',$table,"num_exp=$num_exp");
@@ -252,13 +256,13 @@
 				return $client;
 			}
 
-		function redirectTo($statut,$email,$numcmd){
+		function redirectTo($statut,$email,$numcmd,$code_chantier){
 				$ch = curl_init();
 				// define options
 				$optArray = array(
 					//https://feraud-color.fr//mails/testMonMail.php?statut=$statut&mail=$email
 
-					CURLOPT_URL => "https://it-feraud.com/auto_notification/send_mail.php?statut=$statut&mail=$email&numCommand=$numcmd",
+					CURLOPT_URL => "https://it-feraud.com/auto_notification/send_mail.php?statut=$statut&mail=$email&numCommand=$numcmd&code_chantier=$code_chantier",
 					CURLOPT_RETURNTRANSFER => true
 				);
 				// apply those options
