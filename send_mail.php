@@ -15,7 +15,7 @@ if(!in_array($numCommand,[null,""])){
     $libCmd = "N° $numCommand";
 }
 if(!in_array($code_chantier,[null,""])){
-    $code_chantier = "Le code chantier rataché est : <b>$code_chantier</b><br><br>";
+    $code_chantier = "La référence chantier rattachée est: <b>$code_chantier</b><br><br>";
 }else{
     $code_chantier = '';
 }
@@ -60,13 +60,13 @@ if(in_array($statut,$tab_message)){
         $mail->SMTPDebug = 0;  //SMTP::DEBUG_SERVER;                      //Enable verbose debug output
         $mail->Host = 'smtp.office365.com';                     //Set the SMTP server to send through
         //                                //Enable SMTP authentication
-        $mail->Username = 'mail-auto@groupe-feraud.com';                     //SMTP username
-        $mail->Password = 'pqcnQWRT9979';                               //SMTP password
+        $mail->Username = 'info-feraud@groupe-feraud.com';                     //SMTP username
+        $mail->Password = 'g/9Nn0J]Zu8}x@U9';                               //SMTP password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;            //Enable implicit TLS encryption
         $mail->Port = 587;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
        
         //Recipients
-        $mail->setFrom('mail-auto@groupe-feraud.com', 'Suivi de commande Feraud');
+        $mail->setFrom('info-feraud@groupe-feraud.com', 'Suivi de commande Feraud');
         $mail->addAddress($leMail, 'Client');     //Add a recipient
         //$mail->addAddress('j.caline@groupe-feraud.com');               //Name is optional
         //$mail->addReplyTo('info@example.com', 'Information');
@@ -93,7 +93,7 @@ if(in_array($statut,$tab_message)){
         $mail->CharSet = 'UTF-8';
         $mail->Encoding = 'base64';
     
-        //$mail->send();
+        $mail->send();
         echo 'Message has been sent';
     } catch (Exception $e) {
         echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";

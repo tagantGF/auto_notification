@@ -70,14 +70,19 @@
 	try{
 		$mesStatus = getStatus();
 		$restrictions = ['dacos.achat@dacos.fr'];
+		// echo '<pre>';
+		// 	print_r($mesStatus);
+		// echo '</pre>';
 		//$clients = $clients->clients;
 		foreach($mesStatus as $key2=>$item2){
 			$valeurinit = str_replace("&nbsp;","",$item2[1]);
-			$recup = $manager->selectionUnique2('suivi_expedition',array('*'),"ref='$valeurinit'");
+			$valeurinit =  substr($valeurinit, 0, 10);
+			
+			$recup = $manager->selectionUnique2('suivi_expedition',array('*'),"ref LIKE '%$valeurinit%'");
 			if(count($recup) == 0){
 				if($item2[0] != '' && $item2[1] != '' && $item2[2] != ''){
 					$emaill = '';
-					$rr = str_replace("&nbsp;","",$item2[1]);
+					$rr = $valeurinit;
 					if($item2[0] == "Livré conforme"){
 						if($item2[0] != ''){
 							if(intval($rr) != 0){
@@ -101,7 +106,8 @@
 								'send'=>"true"
 							);
 							$manager->insertion('suivi_expedition',$table,'');
-							if(!in_array($emaill,$restrictions)){
+							$f = $manager->selectionUnique2('suivi_expedition',array('*'),"ref LIKE '%$rr%'");
+							if(!in_array($emaill,$restrictions) && count($f) != 0){
 								redirectTo($item2[0],$emaill,$numcmd,$code_chantier);
 							}
 						}
@@ -128,13 +134,15 @@
 								'send'=>"false"
 							);
 							$manager->insertion('suivi_expedition',$table,'');
-							if(!in_array($emaill,$restrictions)){
+							$f = $manager->selectionUnique2('suivi_expedition',array('*'),"ref LIKE '%$rr%'");
+							if(!in_array($emaill,$restrictions) && count($f) != 0){
 								redirectTo($item2[0],$emaill,$numcmd,$code_chantier);
 							}
 						}
 					}
 				}
-			}else{
+			}
+			else{
 				if($item2[0] != $recup[0]->statut){
 					if($item2[0] == "Livré conforme"){
 						$table = array(
@@ -154,7 +162,7 @@
 						if(!in_array($maill,$restrictions)){
 							redirectTo($item2[0],$maill,$numcmd,$code_chantier);
 						}
-						$manager->modifier('suivi_expedition',$table,"num_exp=$num_exp");
+						$manager->modifier('suivi_expedition',$table,"num_exp LIKE '%$num_exp%'");
 					}else{
 						$table = array(
 							'statut'=>"$item2[0]",
@@ -175,7 +183,7 @@
 								redirectTo($item2[0],$maill,$numcmd,$code_chantier);
 							}
 						}
-						$manager->modifier('suivi_expedition',$table,"num_exp=$num_exp");
+						$manager->modifier('suivi_expedition',$table,"num_exp LIKE '%$num_exp%'");
 					}
 				}
 			}

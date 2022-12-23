@@ -2,8 +2,8 @@
 	header("Access-Control-Allow-Origin: *");
 	header("Content-Type: text/html; charset=utf-8");
 	include_once('model/bigModelForMe.php');
-	//**************************************get all commands status ********************************** */
-	$clients = getUser('',$manager);
+	//**************************************get all commands status ********************************** */ da028
+	//$clients = getUser('',$manager);
 	$lesMails = array();
 	$commandes = array();
 	function getStatus(){
@@ -69,65 +69,80 @@
 	//*****************************************save in bdd ********************************** */
 	try{
 		$mesStatus = getStatus();
+		$restrictions = ['dacos.achat@dacos.fr'];
+		// echo '<pre>';
+		// 	print_r($mesStatus);
+		// echo '</pre>';
 		//$clients = $clients->clients;
 		foreach($mesStatus as $key2=>$item2){
 			$valeurinit = str_replace("&nbsp;","",$item2[1]);
-			$recup = $manager->selectionUnique2('suivi_expedition',array('*'),"ref='$valeurinit'");
+			$valeurinit =  substr($valeurinit, 0, 10);
+			
+			$recup = $manager->selectionUnique2('suivi_expedition',array('*'),"ref LIKE '%$valeurinit%'");
 			if(count($recup) == 0){
 				if($item2[0] != '' && $item2[1] != '' && $item2[2] != ''){
 					$emaill = '';
-						$rr = str_replace("&nbsp;","",$item2[1]);
-						if($item2[0] == "Livré conforme"){
-							if($item2[0] != ''){
-								if(intval($rr) != 0){
-									$bl = intval($rr);
-								}else{
-									$bl = $rr;
-								}
-								$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
-								$numcmd = $cmd[0]->ncommand;
-                                $code_clt = $cmd[0]->code_clt;
+					$rr = $valeurinit;
+					if($item2[0] == "Livré conforme"){
+						if($item2[0] != ''){
+							if(intval($rr) != 0){
+								$bl = intval($rr);
+							}else{
+								$bl = $rr;
 							}
-                            $clients = getUser("$code_clt",$manager);
-                            if($clients->client->email != ''){
-                                $emaill = $clients->client->email;
-                                $table = array(
-                                	'statut'=>"$item2[0]",
-                                	'ref'=>$rr,
-                                	'mail'=>"$emaill",
-                                	'client_info'=>"$item2[2]",
-                                	'send'=>"true"
-                                );
-                                $manager->insertion('suivi_expedition',$table,'');
-                                redirectTo($item2[0],$emaill,$numcmd);
-                            }
-						}else{
-							if($item2[0] != ''){
-								if(intval($rr) != 0){
-									$bl = intval($rr);
-								}else{
-									$bl = $rr;
-								}
-								$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
-								$numcmd = $cmd[0]->ncommand;
-                                $code_clt = $cmd[0]->code_clt;
-							}
-                            $clients = getUser("$code_clt",$manager);
-                            if($clients->client->email != ''){
-                                $emaill = $clients->client->email;
-                                $table = array(
-                                	'statut'=>"$item2[0]",
-                                	'ref'=>$rr,
-                                	'mail'=>"$emaill",
-                                	'client_info'=>"$item2[2]",
-                                	'send'=>"false"
-                                );
-                                $manager->insertion('suivi_expedition',$table,'');
-                                redirectTo($item2[0],$emaill,$numcmd);
-                            }
+							$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
+							$numcmd = $cmd[0]->ncommand;
+							$code_clt = $cmd[0]->code_clt;
+							$code_chantier = $cmd[0]->code_chantier;
 						}
+						$clients = getUser("$code_clt",$manager);
+						if($clients->client->email != ''){
+							$emaill = $clients->client->email;
+							$table = array(
+								'statut'=>"$item2[0]",
+								'ref'=>$rr,
+								'mail'=>"$emaill",
+								'client_info'=>"$item2[2]",
+								'send'=>"true"
+							);
+							$manager->insertion('suivi_expedition',$table,'');
+							$f = $manager->selectionUnique2('suivi_expedition',array('*'),"ref LIKE '%$rr%'");
+							if(!in_array($emaill,$restrictions) && count($f) != 0){
+								redirectTo($item2[0],$emaill,$numcmd,$code_chantier);
+							}
+						}
+					}else{
+						if($item2[0] != ''){
+							if(intval($rr) != 0){
+								$bl = intval($rr);
+							}else{
+								$bl = $rr;
+							}
+							$cmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
+							$numcmd = $cmd[0]->ncommand;
+							$code_clt = $cmd[0]->code_clt;
+							$code_chantier = $cmd[0]->code_chantier;
+						}
+						$clients = getUser("$code_clt",$manager);
+						if($clients->client->email != ''){
+							$emaill = $clients->client->email;
+							$table = array(
+								'statut'=>"$item2[0]",
+								'ref'=>$rr,
+								'mail'=>"$emaill",
+								'client_info'=>"$item2[2]",
+								'send'=>"false"
+							);
+							$manager->insertion('suivi_expedition',$table,'');
+							$f = $manager->selectionUnique2('suivi_expedition',array('*'),"ref LIKE '%$rr%'");
+							if(!in_array($emaill,$restrictions) && count($f) != 0){
+								redirectTo($item2[0],$emaill,$numcmd,$code_chantier);
+							}
+						}
+					}
 				}
-			}else{
+			}
+			else{
 				if($item2[0] != $recup[0]->statut){
 					if($item2[0] == "Livré conforme"){
 						$table = array(
@@ -143,8 +158,11 @@
 						}
 						$numcmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
 						$numcmd = $numcmd[0]->ncommand;
-						redirectTo($item2[0],$maill,$numcmd);
-						$manager->modifier('suivi_expedition',$table,"num_exp=$num_exp");
+						$code_chantier = $numcmd[0]->code_chantier;
+						if(!in_array($maill,$restrictions)){
+							redirectTo($item2[0],$maill,$numcmd,$code_chantier);
+						}
+						$manager->modifier('suivi_expedition',$table,"num_exp LIKE '%$num_exp%'");
 					}else{
 						$table = array(
 							'statut'=>"$item2[0]",
@@ -160,9 +178,12 @@
 							}
 							$numcmd = $manager->selectionUnique2('numCommand',array('*'),"bl LIKE '%$bl%'");
 							$numcmd = $numcmd[0]->ncommand;
-							redirectTo($item2[0],$maill,$numcmd);
+							$code_chantier = $numcmd[0]->code_chantier;
+							if(!in_array($maill,$restrictions)){
+								redirectTo($item2[0],$maill,$numcmd,$code_chantier);
+							}
 						}
-						$manager->modifier('suivi_expedition',$table,"num_exp=$num_exp");
+						$manager->modifier('suivi_expedition',$table,"num_exp LIKE '%$num_exp%'");
 					}
 				}
 			}
@@ -243,13 +264,13 @@
 				return $client;
 			}
 
-		function redirectTo($statut,$email,$numcmd){
+		function redirectTo($statut,$email,$numcmd,$code_chantier){
 				$ch = curl_init();
 				// define options
 				$optArray = array(
 					//https://feraud-color.fr//mails/testMonMail.php?statut=$statut&mail=$email
 
-					CURLOPT_URL => "https://it-feraud.com/auto_notification/send_mail.php?statut=$statut&mail=$email&numCommand=$numcmd",
+					CURLOPT_URL => "https://it-feraud.com/auto_notification/send_mail.php?statut=$statut&mail=$email&numCommand=$numcmd&code_chantier=$code_chantier",
 					CURLOPT_RETURNTRANSFER => true
 				);
 				// apply those options
